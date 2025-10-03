@@ -5,41 +5,24 @@
 
 
 
-// enum AccountType {Checking , Saving} ;
-// enum TxKind {Deposit, Withdrawal, Fee, Interest} ;
-// struct AccountSettings
-// {
-//    AccountType typ ;
-//    double apr;
-//    long long fee_flat_cents ;
-// };
-// struct TxRecord
-// {
-//    TxKind kind ;
-//    long long amount_cents ;
-//    long long timestamp ;
-//    const char* note;
-// };
-
-
 const char *Account::getID()
 {
-    return id;
+    return id_;
 }
 
 AccountType Account::getAccountType()
 {
-    return settings.typ ;
+    return settings_.type ;
 }
 
 long long Account::getBlance_Cents()
 {
-    return blance_cent;
+    return blance_cent_;
 }
 
 int Account::getNumber_audit()
 {
-    return auditcount;
+    return auditcount_;
 }
 
 const TxRecord *Account:: getAudit_data()
@@ -48,60 +31,59 @@ const TxRecord *Account:: getAudit_data()
 }
 
 
-// void Account::setAudit_count(int *count)
-// {
-//     if(*count < MaxAudit)
-//        auditcount = *count ;      
-//     else 
-//         std::cout<<"invalid! "   ;
-// }
-// void Account::setAudit_data(TxRecord audit)
-// {
-//     //in kind
-//     if (audit.kind >=0 && audit.kind < 3 )
-//         audit_[auditcount].kind = audit.kind ;
-// }
-
-
-
-
-
 void Account::deposit(long long amount_cents, long long ts, const char *n)
 {
-    blance_cent = apply_deposit(blance_cent, amount_cents) ;
-    audit_ [auditcount].timestamp = ts ;
-    audit_ [auditcount].note = n ; 
-    auditcount +=1 ;
+    if (check_capacity() == 0)
+    {
+        record(Deposit, amount_cents, ts, n) ;    
+        blance_cent_ = apply_deposit(blance_cent_, audit_ [auditcount_].amount_cents) ;
+    }
+    else 
+       std::cout<< "You have reached the maximum transaction limit!" ;
+ 
 }
 
 void Account::withdraw(long long amount_cents, long long ts, const char *n)
 {
-    blance_cent = apply_deposit(blance_cent, amount_cents) ;
-    audit_ [auditcount].timestamp = ts ;
-    audit_ [auditcount].note  = n ; 
-    auditcount++ ;
+        if (check_capacity() == 0)
+    {
+        record(Withdrawal, amount_cents, ts, n) ;
+        blance_cent_ = apply_withdrawal(blance_cent_, audit_ [auditcount_].amount_cents) ;
+    }
+    else 
+       std::cout<< "You have reached the maximum transaction limit!" ;
+ 
+    
 }
 
 
 
 void Account::charge_fee(long long fee_cents, long long ts, const char *n)
 {
-    blance_cent = apply_fee(blance_cent, fee_cents) ;
-    audit_ [auditcount].timestamp = ts ;
-    audit_ [auditcount].note  = n ; 
-    auditcount++ ;
+    if (check_capacity() == 0)
+    {
+        record(Fee, fee_cents, ts, n) ;    
+        blance_cent_ = apply_fee(blance_cent_, audit_ [auditcount_].amount_cents) ;
+    }
+    else 
+       std::cout<< "You have reached the maximum transaction limit!" ;
+
 }
 
 void Account::post_simple_interest(int days, int basis, long long ts, const char* n )
 {
-    blance_cent += simple_interest(basis, settings.apr, days ) ;
-    audit_ [auditcount].timestamp = ts ;
-    audit_ [auditcount].note  = n ; 
-    auditcount ++ ;
+    if (check_capacity() == 0)
+    {
+        record(Interest, basis, ts, n) ;    
+        blance_cent_ += simple_interest(basis, settings_.apr, days ) ;
+    }
+    else 
+       std::cout<< "You have reached the maximum transaction limit!" ;
+ 
 }
 
 
-void Account::apply(const TxRecord& tx)
+void Account::apply(const TxRecord& tx) 
 {
     switch (tx.kind)
     {
@@ -124,8 +106,21 @@ void Account::apply(const TxRecord& tx)
 
 }
 
-Account::Account(const char* ID, const AccountSettings& settings_, long long opening_balance_cents) 
-                : id (ID), settings(settings_), blance_cent (opening_balance_cents)
-                {
-                    
-                }
+void Account::record(TxKind kind, long long amount, long long ts, const char *note)
+{
+        audit_ [auditcount_].amount_cents = amount ;
+        audit_ [auditcount_].timestamp = ts ;
+        audit_ [auditcount_].note  = note ; 
+        auditcount_ ++ ;
+}
+int Account::check_capacity() 
+{
+    if (auditcount_ < MaxAudit )
+       return 0 ;
+
+    return -1 ;    
+}
+
+
+Account::Account(const char* ID, const AccountSettings& settings, long long opening_balance_cents)
+                : id_(ID), settings_(settings), blance_cent_ (opening_balance_cents) {}

@@ -1,5 +1,5 @@
 #ifndef  _ACCOUNT_H
-#define _ACCOUNT_H
+#define  _ACCOUNT_H
 
 #define MaxAudit  256
 
@@ -8,7 +8,7 @@ enum TxKind {Deposit, Withdrawal, Fee, Interest} ;
 
 struct AccountSettings
 {
-   AccountType typ ;
+   AccountType type ;
    double apr ;
    long long fee_flat_cents ;
 };
@@ -23,12 +23,8 @@ struct TxRecord
 
 class Account
 {
-private:
-    const char* id ;
-    long long blance_cent ;
-    int auditcount ;
-    AccountSettings settings ;
-    TxRecord audit_[MaxAudit] ;
+
+Account(const char* ID, const AccountSettings& settings, long long opening_balance_cents) ;
 
 public:
     //getters
@@ -37,11 +33,7 @@ public:
     long long   getBlance_Cents() ;
     int         getNumber_audit() ;
     const TxRecord* getAudit_data() ;
-    
-    //setter
-    void setAudit_count(int *count);
-    void setAudit_data(TxRecord audit);
-    
+
     //operations
     void deposit(long long amount_cents, long long ts, const char* n = nullptr) ;
     void withdraw(long long amount_cents, long long ts, const char* n = nullptr) ;
@@ -50,24 +42,17 @@ public:
     void apply(const TxRecord& tx) ;
 
 
-/// @brief 
-/// @param ID 
-/// @param settings_ 
-/// @param opening_balance_cents 
-Account(const char* ID, const AccountSettings& settings_, long long opening_balance_cents) ;
+private:
+    const char* id_ ;
+    long long blance_cent_ ;
+    int auditcount_ ;
+    AccountSettings settings_ ;
+    TxRecord audit_[MaxAudit] ;
 
-    
+    void record(TxKind kind, long long amount, long long ts, const char* note) ;
+    int  check_capacity() ;
+
 };
-
-/// @brief 
-/// @param ID 
-/// @param settings_ 
-/// @param opening_balance_cents 
-//Account::Account(const char* ID, const AccountSettings& settings_, long long opening_balance_cents) ;
-
-// Account::~Account()
-// {
-// }
 
 
 #endif //_ACCOUNT_H
