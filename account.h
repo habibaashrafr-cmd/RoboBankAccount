@@ -23,9 +23,6 @@ struct TxRecord
 
 class Account
 {
-
-Account(const char* ID, const AccountSettings& settings, long long opening_balance_cents) ;
-
 public:
     //getters
     const char* getID() ;
@@ -35,6 +32,7 @@ public:
     const TxRecord* getAudit_data() ;
 
     //operations
+    Account(const char* ID, const AccountSettings& settings, long long opening_balance_cents) ;
     void deposit(long long amount_cents, long long ts, const char* n = nullptr) ;
     void withdraw(long long amount_cents, long long ts, const char* n = nullptr) ;
     void charge_fee(long long fee_cents, long long ts, const char* n = nullptr) ;
@@ -45,12 +43,12 @@ public:
 private:
     const char* id_ ;
     long long blance_cent_ ;
-    int auditcount_ ;
+    int auditcount_ = 0 ;
     AccountSettings settings_ ;
     TxRecord audit_[MaxAudit] ;
 
     void record(TxKind kind, long long amount, long long ts, const char* note) ;
-    int  check_capacity() ;
+    //int  check_capacity() ;
 
 };
 
